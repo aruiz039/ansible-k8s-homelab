@@ -1,15 +1,14 @@
 ---
 - name: Find the primary LAN IP for this node
   ansible.builtin.set_fact:
-    node_lan_ip: "{{ ansible_host }}"
-
+    node_lan_ip: '{{ ansible_host }}'
 - name: Configure kubelet to advertise the LAN IP
   ansible.builtin.copy:
     content: |
-      # Managed by Ansible — controls which IP kubelet advertises
+        # Managed by Ansible — controls which IP kubelet advertises
       KUBELET_EXTRA_ARGS=--node-ip={{ node_lan_ip }}
     dest: /etc/default/kubelet
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
   notify: Restart kubelet

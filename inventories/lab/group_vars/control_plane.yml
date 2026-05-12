@@ -1,4 +1,4 @@
 ---
 # This becomes the API server's advertise address.
 # For a single control plane node, it's just that node's IP.
-kube_apiserver_advertise_address: "{{ ansible_host }}"
+kube_apiserver_advertise_address: '{{ ansible_host }}'

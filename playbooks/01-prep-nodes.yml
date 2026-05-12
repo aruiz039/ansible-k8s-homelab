@@ -1,8 +1,6 @@
 ---
 - name: Prepare all Kubernetes nodes
   hosts: kube_cluster
-  become: yes
-  gather_facts: yes
-
-  roles:
-    - common
+  become: true
+  gather_facts: true
+  roles: [common]

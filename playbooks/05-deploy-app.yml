@@ -2,19 +2,17 @@
 - name: Install storage provisioner
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   vars:
-    manifests_dir: "{{ playbook_dir }}/../manifests"
+    manifests_dir: '{{ playbook_dir }}/../manifests'
   environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-
+    KUBECONFIG: '{{ kubeconfig_path }}'
   tasks:
     - name: Install local-path-provisioner
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
-        src: "https://raw.githubusercontent.com/rancher/local-path-provisioner/{{ local_path_provisioner_version }}/deploy/local-path-storage.yaml"
-
+        kubeconfig: '{{ kubeconfig_path }}'
+        src: https://raw.githubusercontent.com/rancher/local-path-provisioner/{{ local_path_provisioner_version }}/deploy/local-path-storage.yaml
     - name: Wait for local-path-provisioner to be ready
       ansible.builtin.shell: |
         kubectl --kubeconfig={{ kubeconfig_path }} -n local-path-storage \
@@ -27,76 +25,69 @@
       until: lpp_ready_check.stdout | default('0') | int > 0
       retries: 30
       delay: 5
-
     - name: Set local-path as the default StorageClass
       kubernetes.core.k8s:
         state: patched
         kind: StorageClass
         name: local-path
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition:
           metadata:
             annotations:
-              storageclass.kubernetes.io/is-default-class: "true"
-
+              storageclass.kubernetes.io/is-default-class: 'true'
 - name: Install monitoring stack
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   vars:
-    manifests_dir: "{{ playbook_dir }}/../manifests"
+    manifests_dir: '{{ playbook_dir }}/../manifests'
   environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-
+    KUBECONFIG: '{{ kubeconfig_path }}'
   tasks:
     - name: Add prometheus-community Helm repo
       kubernetes.core.helm_repository:
         name: prometheus-community
         repo_url: https://prometheus-community.github.io/helm-charts
-
     - name: Create monitoring namespace
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition:
           apiVersion: v1
           kind: Namespace
           metadata:
-            name: "{{ monitoring_namespace }}"
-
+            name: '{{ monitoring_namespace }}'
     - name: Apply Grafana admin secret
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/monitoring/grafana-admin-secret.yml.j2') }}"
-
     - name: Install kube-prometheus-stack
       kubernetes.core.helm:
         name: kube-prometheus-stack
         chart_ref: prometheus-community/kube-prometheus-stack
-        chart_version: "{{ kube_prometheus_stack_version }}"
-        release_namespace: "{{ monitoring_namespace }}"
-        kubeconfig: "{{ kubeconfig_path }}"
-        wait: yes
+        chart_version: '{{ kube_prometheus_stack_version }}'
+        release_namespace: '{{ monitoring_namespace }}'
+        kubeconfig: '{{ kubeconfig_path }}'
+        wait: true
         wait_timeout: 10m
         values:
           prometheus:
             prometheusSpec:
               retention: 7d
               resources:
-                requests: { cpu: 100m, memory: 512Mi }
-                limits:   { cpu: 1000m, memory: 2Gi }
+                requests: {cpu: 100m, memory: 512Mi}
+                limits: {cpu: 1000m, memory: 2Gi}
               storageSpec:
                 volumeClaimTemplate:
                   spec:
                     storageClassName: local-path
-                    accessModes: ["ReadWriteOnce"]
+                    accessModes: [ReadWriteOnce]
                     resources:
                       requests:
                         storage: 10Gi
-
           grafana:
-            adminUser: "{{ grafana_admin_user }}"
+            adminUser: '{{ grafana_admin_user }}'
             admin:
               existingSecret: grafana-admin
               userKey: admin-user
@@ -106,33 +97,31 @@
               storageClassName: local-path
               size: 5Gi
             ingress:
-              enabled: false   # we manage this with a separate task
+              enabled: false  # we manage this with a separate task
             grafana.ini:
               server:
-                root_url: "http://grafana.local"
+                root_url: http://grafana.local
                 serve_from_sub_path: false
-
           alertmanager:
             alertmanagerSpec:
               storage:
                 volumeClaimTemplate:
                   spec:
                     storageClassName: local-path
-                    accessModes: ["ReadWriteOnce"]
+                    accessModes: [ReadWriteOnce]
                     resources:
                       requests:
                         storage: 2Gi
-
     - name: Create Grafana ingress
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition:
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
             name: grafana
-            namespace: "{{ monitoring_namespace }}"
+            namespace: '{{ monitoring_namespace }}'
           spec:
             ingressClassName: nginx
             rules:
@@ -146,35 +135,30 @@
                           name: kube-prometheus-stack-grafana
                           port:
                             number: 80
-
 - name: Deploy Ghost blog application
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   vars:
-    manifests_dir: "{{ playbook_dir }}/../manifests"
+    manifests_dir: '{{ playbook_dir }}/../manifests'
   environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-
+    KUBECONFIG: '{{ kubeconfig_path }}'
   tasks:
     - name: Create namespace
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/ghost/namespace.yml.j2') }}"
-
     - name: Apply MySQL secret
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/ghost/mysql-secret.yml.j2') }}"
-
     - name: Deploy MySQL StatefulSet
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/ghost/mysql-statefulset.yml.j2') }}"
-
     - name: Wait for MySQL to be ready
       ansible.builtin.shell: |
         kubectl --kubeconfig={{ kubeconfig_path }} -n {{ ghost_namespace }} \
@@ -187,26 +171,23 @@
       until: "'true' in mysql_ready_check.stdout"
       retries: 30
       delay: 10
-
     - name: Apply Ghost ConfigMap
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/ghost/ghost-configmap.yml.j2') }}"
-
     - name: Compute Ghost config checksum (configmap + secret)
       ansible.builtin.set_fact:
         ghost_config_checksum: >-
-          {{ (lookup('template', manifests_dir + '/ghost/ghost-configmap.yml.j2') +
+          {{ (lookup('template', manifests_dir + '/ghost/ghost-configmap.yml.j2')
+          +
               lookup('template', manifests_dir + '/ghost/mysql-secret.yml.j2'))
              | hash('sha256') }}
-
     - name: Deploy Ghost
       kubernetes.core.k8s:
         state: present
-        kubeconfig: "{{ kubeconfig_path }}"
+        kubeconfig: '{{ kubeconfig_path }}'
         definition: "{{ lookup('template', manifests_dir + '/ghost/ghost-deployment.yml.j2') }}"
-
     - name: Wait for Ghost rollout to complete
       ansible.builtin.shell: |
         kubectl --kubeconfig={{ kubeconfig_path }} -n {{ ghost_namespace }} \
@@ -216,6 +197,7 @@
       changed_when: false
       failed_when: false
       check_mode: false
-      until: ghost_ready_check.stdout | default('0') | int >= (ghost_replicas | int)
+      until: ghost_ready_check.stdout | default('0') | int >= (ghost_replicas |
+        int)
       retries: 30
       delay: 15

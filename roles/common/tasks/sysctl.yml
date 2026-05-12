@@ -5,14 +5,13 @@
     dest: /etc/sysctl.d/99-kubernetes.conf
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
   notify: Reload sysctl
-
 - name: Apply sysctl settings to running kernel
   ansible.posix.sysctl:
-    name: "{{ item.key }}"
-    value: "{{ item.value }}"
+    name: '{{ item.key }}'
+    value: '{{ item.value }}'
     state: present
     sysctl_file: /etc/sysctl.d/99-kubernetes.conf
-    reload: yes
-  loop: "{{ common_sysctl_settings | dict2items }}"
+    reload: true
+  loop: '{{ common_sysctl_settings | dict2items }}'

@@ -1,13 +1,10 @@
 ---
 # Docker apt repo gives more current containerd than Ubuntu's default
-containerd_apt_repo_url: "https://download.docker.com/linux/ubuntu"
-containerd_apt_key_url: "https://download.docker.com/linux/ubuntu/gpg"
+containerd_apt_repo_url: https://download.docker.com/linux/ubuntu
+containerd_apt_key_url: https://download.docker.com/linux/ubuntu/gpg
 containerd_apt_keyring: /etc/apt/keyrings/docker.asc
-
 containerd_packages:
   - containerd.io
-
 # Critical: must be true for kubelet to work with systemd cgroups
 containerd_systemd_cgroup: true
-
 containerd_config_path: /etc/containerd/config.toml

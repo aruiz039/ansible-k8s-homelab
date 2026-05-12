@@ -5,11 +5,10 @@
     dest: /etc/modules-load.d/k8s.conf
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
   notify: Reload kernel modules
-
 - name: Load kernel modules now
   community.general.modprobe:
-    name: "{{ item }}"
+    name: '{{ item }}'
     state: present
-  loop: "{{ common_kernel_modules }}"
+  loop: '{{ common_kernel_modules }}'

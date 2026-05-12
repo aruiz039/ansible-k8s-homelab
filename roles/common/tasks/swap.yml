@@ -3,22 +3,19 @@
   ansible.builtin.command: swapon --show
   register: swap_status
   changed_when: false
-  check_mode: no
-
+  check_mode: false
 - name: Disable swap immediately
   ansible.builtin.command: swapoff -a
   when: swap_status.stdout | length > 0
-
 - name: Remove swap entries from /etc/fstab
   ansible.builtin.replace:
     path: /etc/fstab
-    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    regexp: ^([^#].*?\sswap\s+sw\s+.*)$
     replace: '# \1'
-    backup: yes
-
+    backup: true
 - name: Disable swap.img systemd unit if present
   ansible.builtin.systemd:
     name: swap.img.swap
-    enabled: no
+    enabled: false
     state: stopped
   failed_when: false  # unit may not exist on all systems

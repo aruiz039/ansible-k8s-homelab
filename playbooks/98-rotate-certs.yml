@@ -1,43 +1,36 @@
 ---
 - name: Rotate kubeadm certificates
   hosts: control_plane
-  become: yes
-
+  become: true
   tasks:
     - name: Check current cert expiration
       ansible.builtin.command: kubeadm certs check-expiration
       register: cert_status
       changed_when: false
-
     - name: Show current cert status
       ansible.builtin.debug:
         var: cert_status.stdout_lines
-
     - name: Backup PKI directory
-      ansible.builtin.archive:
+      community.general.archive:
         path: /etc/kubernetes/pki
-        dest: "/root/pki-backup-{{ ansible_date_time.epoch }}.tar.gz"
+        dest: /root/pki-backup-{{ ansible_date_time.epoch }}.tar.gz
         format: gz
-
     - name: Renew all certificates
       ansible.builtin.command: kubeadm certs renew all
-
     - name: Restart control plane components
       ansible.builtin.shell: |
         crictl pods --name kube-apiserver --quiet | xargs -r crictl stopp
         crictl pods --name kube-controller-manager --quiet | xargs -r crictl stopp
         crictl pods --name kube-scheduler --quiet | xargs -r crictl stopp
         crictl pods --name etcd --quiet | xargs -r crictl stopp
-
     - name: Wait for API server to come back
       ansible.builtin.wait_for:
-        host: "{{ ansible_host }}"
+        host: '{{ ansible_host }}'
         port: 6443
         delay: 5
         timeout: 120
-
     - name: Refresh admin.conf locally
       ansible.builtin.fetch:
         src: /etc/kubernetes/admin.conf
-        dest: "{{ local_kubeconfig_path }}"
-        flat: yes
+        dest: '{{ local_kubeconfig_path }}'
+        flat: true

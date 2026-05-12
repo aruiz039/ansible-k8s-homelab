@@ -1,9 +1,6 @@
 ---
 - name: Install Kubernetes runtime and components on all nodes
   hosts: kube_cluster
-  become: yes
-  gather_facts: yes
-
-  roles:
-    - containerd
-    - kubernetes
+  become: true
+  gather_facts: true
+  roles: [containerd, kubernetes]
