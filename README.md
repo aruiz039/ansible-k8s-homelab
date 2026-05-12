@@ -18,7 +18,7 @@ A production-style Kubernetes cluster provisioned and operated entirely through 
 
 ## Architecture
 
-![Architecture](k8s_homelab_architecture.svgarchitecture.svg)
+![Architecture](k8s_homelab_architecture.svg)
 
 ## Stack
 
