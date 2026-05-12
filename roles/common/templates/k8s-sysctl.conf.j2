@@ -1,0 +1,5 @@
+# Sysctl settings required for Kubernetes
+# Managed by Ansible — do not edit manually
+{% for key, value in common_sysctl_settings.items() %}
+{{ key }} = {{ value }}
+{% endfor %}

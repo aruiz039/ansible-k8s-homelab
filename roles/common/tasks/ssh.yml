@@ -1,0 +1,25 @@
+---
+- name: Harden SSH — disable root login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: "PermitRootLogin {{ common_ssh_permit_root_login }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+    backup: yes
+  notify: Restart sshd
+
+- name: Harden SSH — disable password auth
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication {{ common_ssh_password_auth }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd
+
+- name: Harden SSH — enable pubkey auth
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PubkeyAuthentication'
+    line: "PubkeyAuthentication {{ common_ssh_pubkey_auth }}"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd

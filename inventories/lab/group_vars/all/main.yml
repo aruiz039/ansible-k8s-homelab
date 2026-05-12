@@ -1,0 +1,57 @@
+---
+# Pod CIDR — must match what your CNI expects.
+# Cilium and Calico are flexible; Flannel defaults to 10.244.0.0/16.
+kube_pod_cidr: "10.244.0.0/16"
+
+# Service CIDR — leave default unless you know why
+kube_service_cidr: "10.96.0.0/12"
+
+# Path on your laptop where the kubeconfig lands
+local_kubeconfig_path: "{{ playbook_dir }}/../admin.conf"
+
+# Kubernetes version — used by both the install role and the bootstrap playbook
+kubernetes_version: "1.33"
+kubernetes_package_version: "1.33.11-1.1"
+
+# Kubernetes apt repository — used by both the install role and the upgrade playbook
+kubernetes_apt_keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+kubernetes_apt_repo_base: "https://pkgs.k8s.io/core:/stable:"
+
+# Path to kubeconfig (relative to playbook_dir)
+kubeconfig_path: "{{ playbook_dir }}/../admin.conf"
+
+# Cilium config
+cilium_version: "1.16.5"   # check https://github.com/cilium/cilium/releases
+
+# MetalLB config
+metallb_version: "0.14.9"  # check https://github.com/metallb/metallb/releases
+# IP range MetalLB will hand out. Must be unused on your LAN.
+# For Multipass, pick a range outside DHCP scope but in the same subnet.
+metallb_ip_range: "192.168.1.240-192.168.1.250"
+
+# ingress-nginx
+ingress_nginx_version: "4.12.0"  # chart version, check https://github.com/kubernetes/ingress-nginx
+
+# Storage
+local_path_provisioner_version: "v0.0.31"  # check https://github.com/rancher/local-path-provisioner/releases
+
+# Application
+ghost_namespace: "ghost"
+ghost_image_tag: "5.105"  # pin a version
+ghost_replicas: 1
+mysql_db_name: "ghost"
+mysql_db_user: "ghost"
+mysql_db_password: "{{ vault_mysql_db_password }}"
+mysql_root_password: "{{ vault_mysql_root_password }}"
+ghost_url: "http://blog.local"
+
+# Monitoring
+monitoring_namespace: "monitoring"
+kube_prometheus_stack_version: "66.3.0"  # check https://github.com/prometheus-community/helm-charts
+grafana_admin_user: "admin"
+
+grafana_admin_password: "{{ vault_grafana_admin_password }}"
+
+ghost_db_password: "{{ vault_ghost_db_password }}"
+
+ghost_log_level: "info"

@@ -1,0 +1,32 @@
+---
+- name: Include package installation tasks
+  ansible.builtin.import_tasks: packages.yml
+  tags: [common, packages]
+
+- name: Include hostname tasks
+  ansible.builtin.import_tasks: hostname.yml
+  tags: [common, hostname]
+
+- name: Include swap tasks
+  ansible.builtin.import_tasks: swap.yml
+  tags: [common, swap]
+
+- name: Include kernel module tasks
+  ansible.builtin.import_tasks: kernel.yml
+  tags: [common, kernel]
+
+- name: Include sysctl tasks
+  ansible.builtin.import_tasks: sysctl.yml
+  tags: [common, sysctl]
+
+- name: Include time sync tasks
+  ansible.builtin.import_tasks: time.yml
+  tags: [common, time]
+
+- name: Include SSH hardening tasks
+  ansible.builtin.import_tasks: ssh.yml
+  tags: [common, ssh]
+
+- name: Include kubelet configuration tasks
+  ansible.builtin.import_tasks: kubelet.yml
+  tags: [common, kubelet]

@@ -1,0 +1,29 @@
+# Kubernetes credentials
+admin.conf
+*.kubeconfig
+
+# Ansible artifacts
+*.retry
+.ansible/
+.ansible-vault-pass
+~/.ansible-vault-pass
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Local secrets / overrides
+inventories/*/host_vars/*.vault
+inventories/*/*.local
+*.local.yml
+
+# Generated kubeconfigs
+kubeconfig

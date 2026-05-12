@@ -1,0 +1,9 @@
+---
+kubernetes_apt_repo_base: "https://pkgs.k8s.io/core:/stable:"
+kubernetes_apt_keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+kubernetes_packages:
+  - kubelet
+  - kubeadm
+  - kubectl
+

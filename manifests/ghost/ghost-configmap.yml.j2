@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghost-config
+  namespace: {{ ghost_namespace }}
+data:
+  url: "{{ ghost_url }}"
+  database__client: "mysql"
+  database__connection__host: "mysql.{{ ghost_namespace }}.svc.cluster.local"
+  database__connection__port: "3306"
+  database__connection__database: "{{ mysql_db_name }}"
+  database__connection__user: "{{ mysql_db_user }}"
+  NODE_ENV: "production"
+  logging__level: "{{ ghost_log_level }}"
+

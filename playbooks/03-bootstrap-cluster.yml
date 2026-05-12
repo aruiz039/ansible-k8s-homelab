@@ -1,0 +1,104 @@
+---
+# ============================================================
+# PLAY 1: Initialize the control plane
+# ============================================================
+- name: Initialize Kubernetes control plane
+  hosts: control_plane
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Check if cluster is already initialized
+      ansible.builtin.stat:
+        path: /etc/kubernetes/admin.conf
+      register: kubeadm_already_init
+
+    - name: Run kubeadm init
+      ansible.builtin.command:
+        cmd: >-
+          kubeadm init
+          --apiserver-advertise-address={{ kube_apiserver_advertise_address }}
+          --pod-network-cidr={{ kube_pod_cidr }}
+          --service-cidr={{ kube_service_cidr }}
+          --kubernetes-version=v{{ kubernetes_package_version.split('-')[0] }}
+          --upload-certs
+      register: kubeadm_init_result
+      when: not kubeadm_already_init.stat.exists
+
+    - name: Show kubeadm init output (for debugging)
+      ansible.builtin.debug:
+        msg: "{{ kubeadm_init_result.stdout_lines }}"
+      when: kubeadm_init_result.changed
+
+    - name: Create .kube directory for ubuntu user
+      ansible.builtin.file:
+        path: /home/ubuntu/.kube
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0750"
+
+    - name: Copy admin.conf to ubuntu user's kubeconfig
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+
+    - name: Generate fresh join command for workers
+      ansible.builtin.command: kubeadm token create --print-join-command
+      register: kubeadm_join_command
+      changed_when: false
+
+    - name: Stash join command as a fact for other plays
+      ansible.builtin.set_fact:
+        worker_join_command: "{{ kubeadm_join_command.stdout }}"
+
+# ============================================================
+# PLAY 2: Join workers to the cluster
+# ============================================================
+- name: Join worker nodes to the cluster
+  hosts: workers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Check if node is already joined
+      ansible.builtin.stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubelet_conf_stat
+
+    - name: Run kubeadm join on workers
+      ansible.builtin.command:
+        cmd: "{{ hostvars[groups['control_plane'][0]].worker_join_command }}"
+      when: not kubelet_conf_stat.stat.exists
+      register: kubeadm_join_result
+
+    - name: Show kubeadm join output
+      ansible.builtin.debug:
+        msg: "{{ kubeadm_join_result.stdout_lines }}"
+      when: kubeadm_join_result.changed
+
+# ============================================================
+# PLAY 3: Fetch kubeconfig to local machine
+# ============================================================
+- name: Fetch kubeconfig to local controller
+  hosts: control_plane
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Fetch admin.conf to local machine
+      ansible.builtin.fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: "{{ local_kubeconfig_path }}"
+        flat: yes
+
+    - name: Display kubeconfig path and usage instructions
+      ansible.builtin.debug:
+        msg:
+          - "Kubeconfig fetched to: {{ local_kubeconfig_path }}"
+          - "Use it with: export KUBECONFIG={{ local_kubeconfig_path }}"
+          - "Or: kubectl --kubeconfig={{ local_kubeconfig_path }} get nodes"

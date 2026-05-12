@@ -1,0 +1,27 @@
+---
+- name: Reload kernel modules
+  ansible.builtin.shell: |
+    systemctl restart systemd-modules-load.service
+  listen: Reload kernel modules
+
+- name: Reload sysctl
+  ansible.builtin.command: sysctl --system
+  listen: Reload sysctl
+
+- name: Restart sshd
+  ansible.builtin.systemd:
+    name: ssh
+    state: restarted
+  listen: Restart sshd
+
+- name: Restart chrony
+  ansible.builtin.systemd:
+    name: chrony
+    state: restarted
+  listen: Restart chrony
+
+- name: Restart kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: yes

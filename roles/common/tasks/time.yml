@@ -1,0 +1,16 @@
+---
+- name: Ensure chrony is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+
+- name: Ensure chrony is enabled and running
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: yes
+    state: started
+
+- name: Force immediate clock sync
+  ansible.builtin.command: chronyc makestep
+  changed_when: true
+  failed_when: false

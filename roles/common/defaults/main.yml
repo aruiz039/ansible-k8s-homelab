@@ -1,0 +1,30 @@
+---
+# Packages every node needs regardless of role
+common_base_packages:
+  - curl
+  - wget
+  - vim
+  - git
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - software-properties-common
+  - chrony
+  - net-tools
+  - htop
+
+# Kernel modules required by Kubernetes
+common_kernel_modules:
+  - overlay
+  - br_netfilter
+
+# Sysctls required by Kubernetes
+common_sysctl_settings:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1
+
+# SSH hardening
+common_ssh_permit_root_login: "no"
+common_ssh_password_auth: "no"
+common_ssh_pubkey_auth: "yes"

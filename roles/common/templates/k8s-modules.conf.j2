@@ -1,0 +1,5 @@
+# Kernel modules required for Kubernetes networking
+# Managed by Ansible — do not edit manually
+{% for module in common_kernel_modules %}
+{{ module }}
+{% endfor %}

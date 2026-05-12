@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost
+  namespace: {{ ghost_namespace }}
+spec:
+  replicas: {{ ghost_replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ghost
+  template:
+    metadata:
+      labels:
+        app: ghost
+      annotations:
+        configmap-checksum: "{{ ghost_config_checksum }}"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ghost
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: ghost
+          image: ghost:{{ ghost_image_tag }}
+          ports:
+            - containerPort: 2368
+          envFrom:
+            - configMapRef:
+                name: ghost-config
+          env:
+            - name: database__connection__password
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: content
+              mountPath: /var/lib/ghost/content
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: 1000m, memory: 1Gi }
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 2368
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: content
+          persistentVolumeClaim:
+            claimName: ghost-content
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-content
+  namespace: {{ ghost_namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost
+  namespace: {{ ghost_namespace }}
+spec:
+  ports:
+    - port: 80
+      targetPort: 2368
+  selector:
+    app: ghost
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ghost
+  namespace: {{ ghost_namespace }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: blog.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ghost
+                port:
+                  number: 80
