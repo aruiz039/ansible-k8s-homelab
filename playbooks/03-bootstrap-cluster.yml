@@ -22,10 +22,7 @@
           --upload-certs
       register: kubeadm_init_result
       when: not kubeadm_already_init.stat.exists
-    - name: Show kubeadm init output (for debugging)
-      ansible.builtin.debug:
-        msg: '{{ kubeadm_init_result.stdout_lines }}'
-      when: kubeadm_init_result.changed
+      changed_when: kubeadm_init_result.rc == 0
     - name: Create .kube directory for ubuntu user
       ansible.builtin.file:
         path: /home/ubuntu/.kube
@@ -66,10 +63,8 @@
         cmd: "{{ hostvars[groups['control_plane'][0]].worker_join_command }}"
       when: not kubelet_conf_stat.stat.exists
       register: kubeadm_join_result
-    - name: Show kubeadm join output
-      ansible.builtin.debug:
-        msg: '{{ kubeadm_join_result.stdout_lines }}'
-      when: kubeadm_join_result.changed
+      changed_when: kubeadm_join_result.rc == 0
+
 
 # ============================================================
 # PLAY 3: Fetch kubeconfig to local machine

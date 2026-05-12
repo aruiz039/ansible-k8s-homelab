@@ -15,14 +15,18 @@
         path: /etc/kubernetes/pki
         dest: /root/pki-backup-{{ ansible_date_time.epoch }}.tar.gz
         format: gz
+        mode: "0600"
     - name: Renew all certificates
       ansible.builtin.command: kubeadm certs renew all
+      changed_when: true
     - name: Restart control plane components
       ansible.builtin.shell: |
+        set -o pipefail
         crictl pods --name kube-apiserver --quiet | xargs -r crictl stopp
         crictl pods --name kube-controller-manager --quiet | xargs -r crictl stopp
         crictl pods --name kube-scheduler --quiet | xargs -r crictl stopp
         crictl pods --name etcd --quiet | xargs -r crictl stopp
+      changed_when: true
     - name: Wait for API server to come back
       ansible.builtin.wait_for:
         host: '{{ ansible_host }}'
