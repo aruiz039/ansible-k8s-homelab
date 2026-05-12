@@ -3,6 +3,7 @@ exclude_paths:
   - .github/
   - .ansible/
   - inventories/lab/group_vars/all/vault.yml
+  - .README.md
 
 skip_list:
   - yaml[line-length] # already enforced by yamllint
