@@ -18,47 +18,7 @@ A production-style Kubernetes cluster provisioned and operated entirely through 
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph "Ansible Controller (laptop / WSL)"
-        A[Playbooks]
-        V[Ansible Vault]
-    end
-
-    subgraph "Kubernetes Cluster"
-        CP[Control Plane<br/>cp1]
-        W1[Worker<br/>worker1]
-        W2[Worker<br/>worker2]
-        W3[Worker<br/>worker3]
-
-        subgraph "Workloads"
-            G[Ghost Blog]
-            M[MySQL]
-            P[Prometheus + Grafana]
-        end
-    end
-
-    subgraph "Networking"
-        C[Cilium CNI]
-        L[MetalLB LoadBalancer]
-        N[nginx Ingress]
-    end
-
-    A -->|SSH + kubeadm| CP
-    A -->|SSH + kubeadm| W1
-    A -->|SSH + kubeadm| W2
-    A -->|SSH + kubeadm| W3
-    A -->|kubeconfig + Helm| CP
-    V -.->|secrets| A
-
-    CP --- W1
-    CP --- W2
-    CP --- W3
-
-    G -.->|persistent volume| W1
-    M -.->|stateful set| W2
-    P -.->|metrics scrape| CP
-```
+![Architecture](k8s_homelab_architecture.svgarchitecture.svg)
 
 ## Stack
 
